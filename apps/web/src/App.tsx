@@ -1,5 +1,5 @@
-// apps/web/src/App.tsx
 import { useState } from "react";
+import Lobby from "./components/Lobby";
 import { triggerUpdate } from "./api/admin";
 
 export default function App() {
@@ -22,7 +22,7 @@ export default function App() {
   };
 
   return (
-    <div style={{ maxWidth: 720, margin: "2rem auto", fontFamily: "system-ui, sans-serif" }}>
+    <div style={{ maxWidth: 900, margin: "2rem auto", fontFamily: "system-ui, sans-serif" }}>
       <h1>BoardBeam — Admin</h1>
       <p>Press the button to check & apply updates.</p>
       <button onClick={onUpdate} disabled={loading} style={{ padding: "0.6rem 1rem" }}>
@@ -40,6 +40,8 @@ export default function App() {
           {JSON.stringify(result, null, 2)}
         </pre>
       )}
+
+      <Lobby />
     </div>
   );
 }
