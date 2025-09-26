@@ -1,0 +1,5 @@
+{
+  "name": "tgc-remote",
+  "private": true,
+  "workspaces": ["apps/*", "packages/*"]
+}
