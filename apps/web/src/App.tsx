@@ -1,35 +1,45 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+// apps/web/src/App.tsx
+import { useState } from "react";
+import { triggerUpdate } from "./api/admin";
 
-function App() {
-  const [count, setCount] = useState(0)
+export default function App() {
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<any>(null);
+  const [error, setError] = useState<string>("");
+
+  const onUpdate = async () => {
+    setLoading(true);
+    setError("");
+    setResult(null);
+    try {
+      const res = await triggerUpdate();
+      setResult(res);
+    } catch (e: any) {
+      setError(e?.message ?? String(e));
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
-}
+    <div style={{ maxWidth: 720, margin: "2rem auto", fontFamily: "system-ui, sans-serif" }}>
+      <h1>BoardBeam — Admin</h1>
+      <p>Press the button to check & apply updates.</p>
+      <button onClick={onUpdate} disabled={loading} style={{ padding: "0.6rem 1rem" }}>
+        {loading ? "Updating..." : "Update"}
+      </button>
 
-export default App
+      {error && (
+        <pre style={{ background: "#fee", padding: "1rem", marginTop: "1rem", whiteSpace: "pre-wrap" }}>
+          {error}
+        </pre>
+      )}
+
+      {result && (
+        <pre style={{ background: "#eef", padding: "1rem", marginTop: "1rem", whiteSpace: "pre-wrap" }}>
+          {JSON.stringify(result, null, 2)}
+        </pre>
+      )}
+    </div>
+  );
+}

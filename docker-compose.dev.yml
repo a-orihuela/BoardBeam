@@ -1,28 +1,48 @@
-# docker-compose.dev.yml
 name: boardbeam
+
 services:
+  server:
+    image: node:20-alpine
+    working_dir: /app
+    command: sh -c "npm ci || npm install && npm run dev"
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./apps/server:/app
+    env_file: .env.server
+    environment:
+      - NODE_ENV=development
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/healthz >/dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+
+  # For reliability we serve the frontend with 'preview' (no HMR). 
+  # If you prefer dev/HMR later, cambia 'command' a Vite dev y
+  # ajusta el healthcheck a la misma URL (:5173).
   web:
     image: node:20-alpine
     working_dir: /app
-    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    command: sh -c "npm ci || npm install && npm run build && npm run preview -- --host 0.0.0.0 --port 5173"
     ports:
       - "5173:5173"
     volumes:
       - ./apps/web:/app
     environment:
       - NODE_ENV=development
-
-  server:
-    image: node:20-alpine
-    working_dir: /app
-    command: sh -c "npm install && npm run dev"
-    ports:
-      - "8080:8080"
-    volumes:
-      - ./apps/server:/app
-    environment:
-      - NODE_ENV=development
-      - PORT=8080
+      - CHOKIDAR_USEPOLLING=1
+      - VITE_API_BASE=http://localhost:8080
+    depends_on:
+      server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:5173/ >/dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 20s
 
   turn:
     image: instrumentisto/coturn
@@ -42,4 +62,10 @@ services:
       - ./:/stack
     ports:
       - "8088:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8080/healthz || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
     restart: unless-stopped
